@@ -11,7 +11,7 @@
  */
 class Site_pages_editor_upd
 {
-    public $version = '1.0.0';
+    public $version = '1.0.1';
 
     /**
      * Installation Method
@@ -53,6 +53,8 @@ class Site_pages_editor_upd
      */
     public function update($current = '')
     {
+        ee()->db->update('modules', array('module_version' => $this->version), array('module_name', 'Site_pages_editor'));
+
         return TRUE;
     }
 }

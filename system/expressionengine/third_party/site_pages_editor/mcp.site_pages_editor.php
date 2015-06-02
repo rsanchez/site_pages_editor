@@ -54,7 +54,14 @@ class Site_pages_editor_mcp
 
         foreach ($rows as $row)
         {
-            $title = str_repeat('&middot;&nbsp;', substr_count($row['uri'], '/', 2) - 1).$row['title'];
+            // home page can be double slashes
+            $uri = $row['uri'] === '//' ? '/' : $row['uri'];
+
+            // determine number of segments
+            $depth = substr_count(trim($uri, '/'), '/');
+
+            // indent title according to depth
+            $title = str_repeat('&middot;&nbsp;', $depth).$row['title'];
 
             $title_link = anchor(sprintf('%s&C=content_publish&M=entry_form&channel_id=%s&entry_id=%s', BASE, $row['channel_id'], $row['entry_id']), $title);
 
@@ -63,7 +70,7 @@ class Site_pages_editor_mcp
                 ee()->table->add_row(
                     array('width' => '1%', 'data' => $row['entry_id']),
                     $title_link,
-                    '<pre>'.$row['uri'].'</pre>',
+                    '<pre>'.$uri.'</pre>',
                     $templates[$row['template']]
                 );
             }
@@ -72,7 +79,7 @@ class Site_pages_editor_mcp
                 ee()->table->add_row(
                     array('width' => '1%', 'data' => $row['entry_id']),
                     $title_link,
-                    form_input(sprintf('uris[%s]', $row['entry_id']), $row['uri']),
+                    form_input(sprintf('uris[%s]', $row['entry_id']), $uri),
                     array('width' => '1%', 'data' => form_dropdown(sprintf('templates[%s]', $row['entry_id']), $templates, $row['template']))
                 );
             }
@@ -100,6 +107,15 @@ class Site_pages_editor_mcp
         $site_pages[$site_id]['uris'] = ee()->input->post('uris');
 
         $site_pages[$site_id]['templates'] = ee()->input->post('templates');
+
+        foreach ($site_pages[$site_id]['uris'] as $entry_id => $uri)
+        {
+            // save single slash as double slashes
+            if ($uri === '/')
+            {
+                $site_pages[$site_id]['uris'][$entry_id] = '//';
+            }
+        }
 
         ee()->db->update(
             'sites',
